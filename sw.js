@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pattern-english-v9'
+const CACHE_NAME = 'pattern-english-v10'
 const APP_SHELL = [
   '/',
   '/index.html',
