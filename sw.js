@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pattern-english-v6'
+const CACHE_NAME = 'pattern-english-v7'
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -19,7 +19,7 @@ self.addEventListener('install', (event) => {
       const assetUrls = [...indexHtml.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map(
         (match) => match[1],
       )
-      await cache.addAll(assetUrls)
+      await Promise.all(assetUrls.map((url) => cache.add(url).catch(() => undefined)))
     }),
   )
   self.skipWaiting()
