@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pattern-english-v3'
+const CACHE_NAME = 'pattern-english-v4'
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -38,20 +38,40 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
+  const requestUrl = new URL(event.request.url)
+  if (requestUrl.origin !== self.location.origin) return
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached
-
-      return fetch(event.request)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
         .then((response) => {
           const copy = response.clone()
-          if (response.ok && new URL(event.request.url).origin === self.location.origin) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
-          }
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put('/', copy.clone())
+            cache.put('/index.html', copy)
+          })
           return response
         })
-        .catch(() => caches.match('/index.html'))
-    }),
+        .catch(() => caches.match('/index.html')),
+    )
+    return
+  }
+
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone()
+        if (response.ok) {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
+        }
+        return response
+      })
+      .catch(() =>
+        caches.match(event.request).then((cached) => {
+          if (cached) return cached
+          if (event.request.destination === 'document') return caches.match('/index.html')
+          return undefined
+        }),
+      ),
   )
 })
